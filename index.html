@@ -1,0 +1,103 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>VoidAI</title>
+  <style>
+    body {
+      background-color: #0b0c10;
+      color: #c5c6c7;
+      font-family: 'Segoe UI', sans-serif;
+      text-align: center;
+      padding: 2rem;
+    }
+    h1 {
+      color: #66fcf1;
+    }
+    input, textarea, button {
+      margin: 0.5rem;
+      padding: 0.5rem;
+      border-radius: 8px;
+      border: none;
+    }
+    button {
+      background-color: #45a29e;
+      color: white;
+      cursor: pointer;
+    }
+    #chat {
+      max-width: 600px;
+      margin: auto;
+      text-align: left;
+      background: #1f2833;
+      padding: 1rem;
+      border-radius: 10px;
+      height: 300px;
+      overflow-y: auto;
+    }
+  </style>
+</head>
+<body>
+  <h1>VoidAI</h1>
+  <div id="chat"></div>
+  <input type="text" id="userInput" placeholder="Ask me anything..." />
+  <button onclick="sendMessage()">Send</button>
+  <br><br>
+  <textarea id="artPrompt" placeholder="Describe what to generate..."></textarea>
+  <button onclick="generateArt()">Generate Art</button>
+  <div id="imageResult"></div>
+
+  <script>
+    const apiKey = "sk-proj-REDACTED-FOR-SECURITY";
+
+    async function sendMessage() {
+      const input = document.getElementById('userInput');
+      const chat = document.getElementById('chat');
+      const userText = input.value;
+      chat.innerHTML += `<p><strong>You:</strong> ${userText}</p>`;
+      input.value = '';
+
+      const res = await fetch("https://api.openai.com/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Authorization": "Bearer " + apiKey,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          model: "gpt-4o",
+          messages: [{ role: "user", content: userText }]
+        })
+      });
+      const data = await res.json();
+      const reply = data.choices?.[0]?.message?.content || "Hmm... I didn't get that.";
+      chat.innerHTML += `<p><strong>VoidAI:</strong> ${reply}</p>`;
+      chat.scrollTop = chat.scrollHeight;
+    }
+
+    async function generateArt() {
+      const prompt = document.getElementById('artPrompt').value;
+      const resultDiv = document.getElementById('imageResult');
+      resultDiv.innerHTML = "Generating...";
+
+      const res = await fetch("https://api.openai.com/v1/images/generations", {
+        method: "POST",
+        headers: {
+          "Authorization": "Bearer " + apiKey,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          model: "dall-e-3",
+          prompt: prompt,
+          n: 1,
+          size: "1024x1024"
+        })
+      });
+      const data = await res.json();
+      const imgUrl = data.data?.[0]?.url;
+      resultDiv.innerHTML = `<img src="${imgUrl}" width="300" />`;
+    }
+  </script>
+</body>
+</html>
