@@ -1,0 +1,122 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>VoidAI</title>
+    <style>
+        body {
+            background-color: #0a0a0a;
+            color: #ffffff;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+        header {
+            background-color: #111;
+            padding: 1rem;
+            text-align: center;
+            font-size: 1.5rem;
+            border-bottom: 1px solid #222;
+        }
+        main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 1rem;
+        }
+        #chat {
+            flex-grow: 1;
+            overflow-y: auto;
+            margin-bottom: 1rem;
+        }
+        .message {
+            margin: 0.5rem 0;
+        }
+        .user {
+            color: #1e90ff;
+        }
+        .bot {
+            color: #90ee90;
+        }
+        form {
+            display: flex;
+        }
+        input {
+            flex: 1;
+            padding: 0.5rem;
+            font-size: 1rem;
+            border: none;
+            border-radius: 5px;
+        }
+        button {
+            padding: 0.5rem 1rem;
+            background-color: #1e90ff;
+            border: none;
+            color: white;
+            font-size: 1rem;
+            margin-left: 0.5rem;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <header>VoidAI</header>
+    <main>
+        <div id="chat">
+            <div class="message bot">Hi! What can I do for you today?</div>
+        </div>
+        <form id="chat-form">
+            <input type="text" id="user-input" placeholder="Ask me anything..." required>
+            <button type="submit">Send</button>
+        </form>
+    </main>
+    <script>
+        const apiKey = "YOUR_API_KEY_HERE"; // Replace with your OpenAI API key
+        const chatForm = document.getElementById('chat-form');
+        const userInput = document.getElementById('user-input');
+        const chat = document.getElementById('chat');
+
+        chatForm.onsubmit = async (e) => {
+            e.preventDefault();
+            const userMessage = userInput.value.trim();
+            if (!userMessage) return;
+
+            addMessage('user', userMessage);
+            userInput.value = '';
+
+            try {
+                const response = await fetch('https://api.openai.com/v1/chat/completions', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${apiKey}`
+                    },
+                    body: JSON.stringify({
+                        model: "gpt-4",
+                        messages: [{ role: "user", content: userMessage }]
+                    })
+                });
+                const data = await response.json();
+                const botMessage = data.choices?.[0]?.message?.content || "Hmm, I couldn't get a response.";
+                addMessage('bot', botMessage);
+            } catch (error) {
+                addMessage('bot', "Oops! Something went wrong.");
+            }
+        };
+
+        function addMessage(sender, text) {
+            const messageEl = document.createElement('div');
+            messageEl.className = `message ${sender}`;
+            messageEl.textContent = text;
+            chat.appendChild(messageEl);
+            chat.scrollTop = chat.scrollHeight;
+        }
+    </script>
+</body>
+</html>
